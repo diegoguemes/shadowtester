@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<project name="ShadowTester" default="build">
+  <property name="basename" value="ShadowTester" />
+  <property name="debug" value="false" />
+  <property name="basedir" value="../" />
+  <property name="bin" value="${basedir}/bin/" />
+  <property name="src" value="${basedir}/src/" />
+  <property name="lib" value="${basedir}/lib/" />
+  <property name="tools" value="${basedir}/tools/" />
+
+  <target name="clean">
+	  <delete dir="${basedir}bin" />
+  </target>
+
+  <target name="build">
+    <call target="build-cli" />
+    <call target="build-domain" />
+    <call target="build-unit-tests" />
+    <call target="build-integration-tests" />
+  </target>
+
+  <target name="build-cli" depends="build-domain">
+    <mkdir dir="${bin}" />
+    <csc target="exe" output="${bin}shadowtestercli.exe" debug="${debug}">
+      <sources>
+        <include name="${src}ShadowTester.Presentation.CommandLine/*.cs"/>
+        <include name="${src}ShadowTester.Presentation.CommandLine/*/*.cs"/>
+      </sources>
+      <references>
+        <include name="${lib}CommandLine.dll" />
+        <include name="${bin}ShadowTesterDomain.dll" />
+      </references>
+    </csc>
+    <copy file="${lib}CommandLine.dll" tofile="${bin}CommandLine.dll" />
+  </target>
+
+  <target name="build-util">
+    <mkdir dir="${bin}" />
+    <csc target="library" output="${bin}ShadowTesterUtil.dll" debug="${debug}">
+      <sources>
+        <include name="${src}ShadowTester.Util/*.cs"/>
+      </sources>
+    </csc>
+  </target>
+  
+  <target name="build-domain" depends="build-util">
+    <mkdir dir="${bin}" />
+    <csc target="library" output="${bin}ShadowTesterDomain.dll" debug="${debug}">
+      <sources>
+        <include name="${src}ShadowTester.Domain/*.cs"/>
+        <include name="${src}ShadowTester.Domain/*/*.cs"/>
+      </sources>
+      <references>
+        <include name="${bin}ShadowTesterUtil.dll" />
+      </references>
+    </csc>
+  </target>  
+
+  <target name="build-unit-tests" depends="build-domain">
+    <mkdir dir="${bin}" />
+    <csc target="library" output="${bin}ShadowTesterUnitTests.dll" debug="${debug}">
+      <sources>
+        <include name="${src}ShadowTester.UnitTests/*.cs"/>
+      </sources>
+      <references>
+        <include name="${lib}nunit.framework.dll" />
+        <include name="${lib}Rhino.Mocks.dll" />
+        <include name="${bin}ShadowTesterDomain.dll" />
+      </references>
+    </csc>
+  </target>
+
+  <target name="build-integration-tests" depends="build-domain">
+    <mkdir dir="${bin}" />
+    <csc target="library" output="${bin}ShadowTesterIntegrationTests.dll" debug="${debug}">
+      <sources>
+        <include name="${src}ShadowTester.IntegrationTests/*.cs"/>
+      </sources>
+      <references>
+        <include name="${lib}nunit.framework.dll" />
+        <include name="${lib}Rhino.Mocks.dll" />
+        <include name="${bin}ShadowTesterDomain.dll" />
+      </references>
+    </csc>
+    <copy file="${tools}ffmpeg/ffmpeg.exe" tofile="${bin}ffmpeg.exe" />
+  </target>
+
+  <target name="run-tests">
+    <call target="run-unit-tests" />
+    <call target="run-integration-tests" />
+  </target>
+  
+  <target name="run-unit-tests" depends="build-unit-tests">
+    <nunit2>
+      <formatter type="Plain" />
+      <test assemblyname="${bin}ShadowTesterUnitTests.dll">
+        <references>
+          <include name="${lib}nunit.framework.dll" />
+          <include name="${lib}Rhino.Mocks.dll" />
+        </references>
+      </test>
+    </nunit2>
+  </target>
+  
+  <target name="run-integration-tests" depends="build-integration-tests">
+    <nunit2>
+      <formatter type="Plain" />
+      <test assemblyname="${bin}ShadowTesterIntegrationTests.dll">
+        <references>
+          <include name="${lib}nunit.framework.dll" />
+          <include name="${lib}Rhino.Mocks.dll" />
+        </references>
+      </test>
+    </nunit2>
+  </target>  
+</project>

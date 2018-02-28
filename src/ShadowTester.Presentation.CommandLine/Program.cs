@@ -4,6 +4,7 @@ using ShadowTester.Domain;
 using ShadowTester.Domain.Recorder;
 using ShadowTester.Domain.Storage;
 using ShadowTester.Presentation.CommandLine.Commands;
+using System.IO;
 
 namespace ShadowTester.Presentation.CommandLine
 {
@@ -14,6 +15,22 @@ namespace ShadowTester.Presentation.CommandLine
 
         static void Main(string[] args)
         {
+            if (args.Length == 0)
+            {
+                string sessionName = "shadowtesting-session-" + DateTime.Now.ToString("yyyyMMdd-hhmm");
+
+                string directory = Path.Combine(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "shadowtesting"),
+                    sessionName);
+
+                args = new string[] {
+                    "--name=" + sessionName,
+                    "--path=" + directory,
+                    "--fps=1",
+                    "--processes=plastic,gluon,bplastic,bgluon"
+                };
+            }
+
             if (ConfigureApplication(args))
             {
                 RunApplication();
@@ -59,7 +76,6 @@ namespace ShadowTester.Presentation.CommandLine
 
         private static void RunApplication()
         {
-            string option;
             try
             {
                 storageManager.CreateCapturesDirectory(recordConfiguration.CapturesPath);
@@ -69,40 +85,24 @@ namespace ShadowTester.Presentation.CommandLine
                 Console.WriteLine(ex.Message);
                 return;
             }
+
             Factory.ProcessRecorder.Start();
-            Console.WriteLine(GetHeader());
-            Console.WriteLine("Recording...");
-            Console.WriteLine(GetSeparator());
-            do
-            {
-                Console.WriteLine("Actions:");
-                Console.WriteLine(GetMenu());
-                option = ConsoleHelper.GetMenuOption();
-                Console.WriteLine(GetSeparator());
-                ConsoleCommand command = ConsoleCommandFactory.CreateCommand(option, recordConfiguration);
-                command.Execute();
-                Console.WriteLine(GetSeparator());
-            } while (option != ConsoleHelper.STOP_RECORDING_ACTION);
-        }
 
-        private static string GetSeparator()
-        {
-            return string.Empty;
-        }
+            Console.WriteLine("Recording on directory {0}...", recordConfiguration.CapturesPath);
+            Console.WriteLine();
 
-        private static string GetHeader()
-        {
-            return "+-------------------------------------------+\n" +
-                   "|    SHADOWTESTER COMMAND LINE INTERFACE    |\n" +
-                   "+-------------------------------------------+";
-        }
+            Console.WriteLine("Press ENTER to finish and create the video");
+            Console.ReadLine();
 
-        private static string GetMenu()
-        {
-            return "1. Add Process\n" +
-                   "2. Remove Process\n" +
-                   "3. Current Processes\n" +
-                   "4. Stop Recording";
+            Console.WriteLine("Session video will be created at {0}",
+                recordConfiguration.CapturesPath);
+
+            ConsoleCommand command = ConsoleCommandFactory.CreateCommand(
+                ConsoleHelper.STOP_RECORDING_ACTION, recordConfiguration);
+            command.Execute();
+
+            Console.WriteLine("Press ENTER to quit");
+            Console.ReadLine();
         }
     }
 }

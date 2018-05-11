@@ -13,8 +13,8 @@ namespace ShadowTester.Domain.System
             return "Processor: " + Processor + "\n" +
                    "Hard Disk: " + HardDisk + "\n" +
                    "RAM: " + Ram + "\n" +
-                   "Operative System: " + Os + "\n" +
-                   "Usuario: " + User;
+                   "OS: " + Os + "\n" +
+                   "User: " + User;
         }
     }
 }
